@@ -1,0 +1,51 @@
+name: Staging Deployment Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+my-job:
+    runs-on: ubuntu-latest
+  build:
+    # (Same as the QA Testing Workflow)
+
+  deploy_staging:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to AWS Staging Server
+        run: |
+          curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+
+          # Configure AWS CLI with credentials from GitHub Secrets
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
+
+      - name: Send Email Notification on Failure
+        if: failure()
+        run: |
+          sudo apt-get install -y mailutils
+          # Set email content
+          subject="GitHub Actions Workflow Failed: $GITHUB_REPOSITORY/$GITHUB_WORKFLOW"
+          body="The GitHub Actions workflow failed for the branch $GITHUB_REF. Please investigate."
+
+          # Send email
+          echo "$body" | mail -s "$subject" jawadalihunzai2068@gmail.com
+
+      - name: Send Email Notification on Success
+        if: success()
+        run: |
+          # Install mail utility (if not already installed)
+          sudo apt-get install -y mailutils
+
+          # Set email content
+          subject="GitHub Actions Workflow Succeeded: $GITHUB_REPOSITORY/$GITHUB_WORKFLOW"
+          body="The GitHub Actions workflow succeeded for the branch $GITHUB_REF. Deployment to staging or testing environment is complete."
+
+          # Send email
+          echo "$body" | mail -s "$subject" jawadalihunzai2068@gmail.com
