@@ -6,10 +6,31 @@ on:
       - main
 
 jobs:
-my-job:
-    runs-on: ubuntu-latest
   build:
-    # (Same as the QA Testing Workflow)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Build Project
+        run: |
+          # Your build commands here
+          # For example, if you're using a Node.js project:
+          npm install
+          npm run build
+
+      - name: Run Unit Tests
+        run: |
+          # Your unit testing commands here
+          # For example, if you're using Jest:
+          npm test
+
+      - name: Code Analysis/Linting
+        run: |
+          # Your linting commands here
+          # For example, if you're using ESLint:
+          npm run lint
 
   deploy_staging:
     runs-on: ubuntu-latest
@@ -17,35 +38,26 @@ my-job:
     steps:
       - name: Deploy to AWS Staging Server
         run: |
-          curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-
-          # Configure AWS CLI with credentials from GitHub Secrets
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region ${{ secrets.AWS_REGION }}
+          # Your deployment commands for staging here
+          # This could include copying files to a server, restarting services, etc.
+          # Make sure to use GitHub Secrets for sensitive information like AWS credentials.
 
       - name: Send Email Notification on Failure
         if: failure()
         run: |
+          # Your email notification script for failure
+          # For example, using mail command:
           sudo apt-get install -y mailutils
-          # Set email content
-          subject="GitHub Actions Workflow Failed: $GITHUB_REPOSITORY/$GITHUB_WORKFLOW"
-          body="The GitHub Actions workflow failed for the branch $GITHUB_REF. Please investigate."
-
-          # Send email
-          echo "$body" | mail -s "$subject" jawadalihunzai2068@gmail.com
+          subject="GitHub Actions Staging Deployment Failed: $GITHUB_REPOSITORY"
+          body="The GitHub Actions Staging Deployment workflow failed for the push to the main branch. Please check the workflow logs for details."
+          echo "$body" | mail -s "$subject" your-email@example.com
 
       - name: Send Email Notification on Success
         if: success()
         run: |
-          # Install mail utility (if not already installed)
+          # Your email notification script for success
+          # For example, using mail command:
           sudo apt-get install -y mailutils
-
-          # Set email content
-          subject="GitHub Actions Workflow Succeeded: $GITHUB_REPOSITORY/$GITHUB_WORKFLOW"
-          body="The GitHub Actions workflow succeeded for the branch $GITHUB_REF. Deployment to staging or testing environment is complete."
-
-          # Send email
-          echo "$body" | mail -s "$subject" jawadalihunzai2068@gmail.com
+          subject="GitHub Actions Staging Deployment Succeeded: $GITHUB_REPOSITORY"
+          body="The GitHub Actions Staging Deployment workflow succeeded for the push to the main branch. The changes are deployed to the AWS staging server."
+          echo "$body" | mail -s "$subject" your-email@example.com
